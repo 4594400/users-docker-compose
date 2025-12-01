@@ -7,8 +7,8 @@ services:
       MYSQL_DATABASE: photo_app
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
+#    ports:
+#      - "3306:3306"
     volumes:
       # - /var/lib/mysql                # Anonymous
       - mysql-data:/var/lib/mysql       # Named
@@ -19,8 +19,9 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-    networks:
-      - my-net
+#    networks:
+#      - my-net
+    network_mode: host
 
   users-ws:
     container_name: users-ws
@@ -31,23 +32,24 @@ services:
       tags:
         - users-ws:latest
         - users-ws:2.0.1
-    ports:
-      - "8082:8082"
+#    ports:
+#      - "8082:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/photo_app
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/photo_app
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_PROFILES_ACTIVE: prod
     depends_on:
       mysql:
         condition: service_healthy
-    networks:
-      - my-net
+#    networks:
+#      - my-net
+    network_mode: host
 
 volumes:
   mysql-data:
 
-networks:
-  my-net:
-    name: my-net
-    driver: bridge
+#networks:
+#  my-net:
+#    name: my-net
+#    driver: bridge
