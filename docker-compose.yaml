@@ -1,0 +1,53 @@
+services:
+  mysql:
+    container_name: mysql-server
+    image: mysql:8.4.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: photo_app
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      # - /var/lib/mysql                # Anonymous
+      - mysql-data:/var/lib/mysql       # Named
+      # - ./mysql-data:/var/lib/mysql   # Bind mount
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - my-net
+
+  users-ws:
+    container_name: users-ws
+    image: 4594400/users-ws-public:2.0.1
+    build:
+      context: "./Users"
+      dockerfile: "Dockerfile-multi-stage"
+      tags:
+        - users-ws:latest
+        - users-ws:2.0.1
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/photo_app
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - my-net
+
+volumes:
+  mysql-data:
+
+networks:
+  my-net:
+    name: my-net
+    driver: bridge
